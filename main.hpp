@@ -172,8 +172,6 @@ vector<Molecules> Molecules::enterdata(vector<Molecules> &MaMol)
 	{
 		cout << "nb de donnees sur cette molecule ? " << MaMol[i].brut << endl;
 		cin >> MaMol[i].donne;
-		cout << "error";
-
 		for (int k = 0; k < MaMol[i].donne; k++)
 		{
 			cout << "molecule : " << MaMol[i].brut << " inserer donne : " << k;
@@ -231,6 +229,7 @@ vector<Molecules> Molecules::cv(vector<Molecules> &MaMol)
 				MaMol[i].conc = MaMol[i].n / MaMol[i].vol;
 		}
 		MaMol[i].conc = (MaMol[i].conc * MaMol[i].vol) / vtot;
+		MaMol[i].typedonne.push_back("conc");
 	}
 	return MaMol;
 }
