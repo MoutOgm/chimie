@@ -58,6 +58,7 @@ public:
 	vector<string> typedonne; //  type de donee genre typedonne[0] est le type de la donnee 0
 							  // concentration becher (c0 * v0) /vtot
 							  // ca * va = cb * vb (/ coef stoechi)
+							  // n  vol masse conc M
 
 	// faire en sorte que ca garde le nb de atom etc
 	map<string, double> atom; // nb atomes et leurs noms
@@ -280,13 +281,18 @@ bool Molecules::reaction(vector<Molecules> &MaMol)
 class Formules
 {
 public:
-	static double caln(double masse, double mmol);	 // avec conc faire masse = conc et mmol = 1/vol pour avoir n
-	static double concentration(double n, double vol); // avoir concentration avec n et vol
-	static double masse(double n, double mmol);		   // avoir la masse avec n et mmol
+	static double calnmasse(double masse, double mmol); // avoir n avec masse
+	static double calnconc(double conc, double vol); 	// avoir n avec conc 
+	static double concentration(double n, double vol);  // avoir concentration avec n et vol
+	static double masse(double n, double mmol);		    // avoir la masse avec n et mmol
 };
-double Formules::caln(double masse, double mmol)
+double Formules::calnmasse(double masse, double mmol)
 {
 	return masse / mmol;
+}
+double Formules::calnconc(double conc, double vol)
+{
+	return conc * vol;
 }
 double Formules::concentration(double n, double vol)
 {

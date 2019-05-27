@@ -1,16 +1,15 @@
 #include "main.hpp"
 
-
 int main()
 {
 	bool Continue = true;
 	while ((bool)Continue)
 	{
 		// calcul masse molaire
-	// calcul ka / pka
-	// -> reactif ou produit
-	// calcul concentration
-	// -> volume gramme masse molaire mol 
+		// calcul ka / pka
+		// -> reactif ou produit
+		// calcul concentration
+		// -> volume gramme masse molaire mol
 		cout << "que voulez vous faire ? (M, Concentration : (sans c0*v0 'Cs', avec 'Ca' ))" << endl;
 		string application;
 		cin >> application;
@@ -24,7 +23,8 @@ int main()
 			MaMol = chimie::Molecules::demandeMol();
 			MaMol = chimie::Molecules::enterdata(MaMol);
 			bool react = chimie::Molecules::reaction(MaMol);
-			if (react == false) {
+			if (react == false)
+			{
 				cout << "la reaction n'est pas valide continuer ? (non = 0, oui = 1)" << endl;
 				bool suite;
 				cin >> suite;
@@ -40,9 +40,10 @@ int main()
 			else
 				cout << "reaction valide";
 			//pour linstant calcul lie a tte les autres molecules
-			for (string::size_type i = 0; i < MaMol.size(); i++) {
+			for (size_t i = 0; i < MaMol.size(); i++)
+			{
 				//if (MaMol[i].select) {
-				chimie::Molecules& mol = MaMol[i];
+				chimie::Molecules &mol = MaMol[i];
 				if (mol.typedonne.size() == 1)
 				{
 					/*
@@ -58,16 +59,36 @@ int main()
 				}
 				else if (mol.typedonne.size() >= 2)
 				{
-					bool test = false;
-					for (size_t k = 0; k < mol.typedonne.size(); k++) {
-						if (mol.typedonne[k] == "volume")
+					for (size_t k = 0; k < mol.typedonne.size(); k++)
+					{
+						for (size_t j = 0; j < mol.typedonne.size(); j++)
 						{
-							test = true;
-							break;
-						}							
+							if (mol.typedonne[k] == "n")
+							{
+								if (mol.typedonne[j] == "mmol")
+								{
+									mol.masse = chimie::Formules::masse(mol.n, mol.mmol);
+									mol.typedonne.push_back("masse");
+								}
+								if (mol.typedonne[j] == "vol")
+								{
+									mol.conc = chimie::Formules::concentration(mol.n, mol.vol);
+									mol.typedonne.push_back("conc");
+								}
+							}
+							else if (mol.typedonne[k] == "conc")
+							{
+								if (mol.typedonne[j] == "vol")
+								{
+									mol.n = chimie::Formules::calnconc(mol.conc, 1/mol.vol);
+									mol.typedonne.push_back("n");
+								}
+							}
+						}
 					}
-
-
+					if (mol.typedonne.size() >= 3)
+					{
+					}
 					/*
 					if (test)
 					{
@@ -80,7 +101,7 @@ int main()
 							}
 							else if (mol.typedonne[k] == "masse")
 							{
-								mol.n = chimie::Formules::caln(mol.masse, mol.mmol);
+								mol.n = chimie::Formules::calnmasse(mol.masse, mol.mmol);
 								mol.conc = chimie::Formules::concentration(mol.n, mol.vol);
 								mol.typedonne.push_back("conc");
 								mol.typedonne.push_back("n");
@@ -89,12 +110,8 @@ int main()
 						}
 					}
 					*/
-					if (mol.typedonne.size() >= 3)
-					{
-
-					}
-					else
-						cout << "manque de donnes relancer le programme" << endl;
+					//else
+						//cout << "manque de donnes relancer le programme" << endl;
 				}
 			}
 		}
@@ -104,9 +121,11 @@ int main()
 			MaMol = chimie::Molecules::enterdata(MaMol);
 			MaMol = chimie::Molecules::cv(MaMol);
 		}
-		for (string::size_type i = 0; i < MaMol.size(); i++) {
-			chimie::Molecules& mol = MaMol[i];
-			for (string::size_type k = 0; k < mol.typedonne.size(); k++) {
+		for (string::size_type i = 0; i < MaMol.size(); i++)
+		{
+			chimie::Molecules &mol = MaMol[i];
+			for (string::size_type k = 0; k < mol.typedonne.size(); k++)
+			{
 				if (mol.typedonne[k] == "vol")
 					cout << "Molecule : " << mol.brut << " a un volume de : " << mol.vol << " L" << endl;
 				else if (mol.typedonne[k] == "masse")
