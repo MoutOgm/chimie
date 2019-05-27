@@ -158,7 +158,7 @@ vector<Molecules> Molecules::demandeMol()
 		int nbpos = 1;
 		int nbmol = 1;
 		string type;
-		cout << "brut, positif, nb positif, nb molecules (dans la reaction), type(reactif, produit, null(pas important)" << endl;
+		cout << "brut, positif, nb positif, nb molecules (dans la reaction), type(react, prod, null(pas important)" << endl;
 		cin >> name >> pos >> nbpos >> nbmol >> type;
 		mol.push_back(chimie::Molecules::set(name, pos, nbpos, nbmol, type));
 		mol[i].mmol = Molecules::masseMolaire(mol[i]);
