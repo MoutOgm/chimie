@@ -65,11 +65,6 @@ public:
 
 };
 
-class Fomurles
-{
-public:
-};
-
 Molecules Molecules::set(string a, char b, int c, int d, string e)
 {
 	Molecules mol = {};
@@ -281,5 +276,21 @@ bool Molecules::reaction(vector<Molecules> &MaMol)
 			return false;
 	}
 	return true;
+}
+
+class Formules
+{
+public:
+	static double caln(double masse, double mmol);
+	static double concentration(double n, double vol);
+};
+
+double Formules::caln(double masse, double mmol)
+{
+	return masse / mmol;
+}
+double Formules::concentration(double n, double vol)
+{
+	return n / vol;
 }
 }; // namespace chimie

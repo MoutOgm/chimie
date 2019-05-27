@@ -69,14 +69,14 @@ int main()
 						for (int k = 0; k < mol.donne; k++) {
 							if (mol.typedonne[k] == "n")
 							{
-								mol.conc = (mol.n / mol.vol);
+								mol.conc = chimie::Formules::concentration(mol.n, mol.vol);
 								mol.typedonne.push_back("conc");
 								//cout << "la concentration de " << mol.brut << " est : " << mol.conc << " mol.L-1" << endl;
 							}
 							else if (mol.typedonne[k] == "masse")
 							{
-								mol.n = mol.masse / mol.mmol;
-								mol.conc = mol.n / mol.vol;
+								mol.n = chimie::Formules::caln(mol.masse, mol.mmol);
+								mol.conc = chimie::Formules::concentration(mol.n, mol.vol);
 								mol.typedonne.push_back("conc");
 								mol.typedonne.push_back("n");
 								//cout << "la concentration de " << mol.brut << " est : " << mol.conc << " mol.L-1" << endl;
@@ -90,7 +90,6 @@ int main()
 					else
 						cout << "manque de donnes relancer le programme" << endl;
 				}
-				//}
 			}
 		}
 		else if (application == "Ca")
