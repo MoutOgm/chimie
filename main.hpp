@@ -4,6 +4,7 @@
 #include <math.h>
 #include <vector>
 #include <map>
+#include <unordered_set>
 using namespace std;
 
 namespace chimie
@@ -30,6 +31,7 @@ const vector<atom> ATOM = {
 	{"Fe", 56, 1.83},
 	{"Ag", 108, 1.93},
 };
+
 class Molecules
 {
 public:
@@ -55,7 +57,7 @@ public:
 	double masse; //g
 	double ks;
 	int donne;				  //nb de donne sur ctte molecule typedonnee.size
-	vector<string> typedonne; //  type de donee genre typedonne[0] est le type de la donnee 0
+	unordered_set<string> typedonne; //  type de donee genre typedonne[0] est le type de la donnee 0
 							  // concentration becher (c0 * v0) /vtot
 							  // ca * va = cb * vb (/ coef stoechi)
 							  // n  vol masse conc M
@@ -63,7 +65,20 @@ public:
 	// faire en sorte que ca garde le nb de atom etc
 	map<string, double> atom; // nb atomes et leurs noms
 							  // atom["C"] = 2
+
 };
+class Formules
+{
+public:
+	static double calnmasse(double masse, double mmol); // avoir n avec masse
+	static double calnconc(double conc, double vol); 	// avoir n avec conc 
+	static double concentration(double n, double vol);  // avoir concentration avec n et vol
+	static double masse(double n, double mmol);		    // avoir la masse avec n et mmol
+	static double volconc(double conc, double n); 		// avoir le volume avec n et conc
+	static double conccv(double conc, double vol, double vtot); // avoir la concentration avec c0v0 /vtot
+};
+
+
 
 Molecules Molecules::set(string a, char b, int c, int d, string e)
 {
@@ -91,7 +106,7 @@ double Molecules::masseMolaire(Molecules &mol)
 			{
 				compt++;
 			}
-			for (u; mol.brut[u] >= '0' && mol.brut[u] <= '9'; u++)
+			for (; mol.brut[u] >= '0' && mol.brut[u] <= '9'; u++)
 			{
 				double c = mol.brut[u] - (double)48;
 				somme = somme + c * pow(10, compt);
@@ -163,7 +178,7 @@ vector<Molecules> Molecules::demandeMol()
 		}
 		mol.push_back(chimie::Molecules::set(name, pos, nbpos, nbmol, type));
 		mol[i].mmol = Molecules::masseMolaire(mol[i]);
-		mol[i].typedonne.push_back("M");
+		mol[i].typedonne.insert("M");
 	}
 	return mol;
 }
@@ -183,31 +198,31 @@ vector<Molecules> Molecules::enterdata(vector<Molecules> &MaMol)
 			{
 				cout << "inserer volume en L :" << endl;
 				cin >> MaMol[i].vol;
-				MaMol[i].typedonne.push_back("vol");
+				MaMol[i].typedonne.insert("vol");
 			}
 			else if (type == "mol")
 			{
 				cout << "inserer nombre de mol en mol :" << endl;
 				cin >> MaMol[i].n;
-				MaMol[i].typedonne.push_back("n");
+				MaMol[i].typedonne.insert("n");
 			}
 			else if (type == "masse")
 			{
 				cout << "inserer masse en g :" << endl;
 				cin >> MaMol[i].masse;
-				MaMol[i].typedonne.push_back("masse");
+				MaMol[i].typedonne.insert("masse");
 			}
 			else if (type == "concentration")
 			{
 				cout << "inserer concentratrion en mol/L :" << endl;
 				cin >> MaMol[i].conc;
-				MaMol[i].typedonne.push_back("conc");
+				MaMol[i].typedonne.insert("conc");
 			}
 			else if (type == "ks")
 			{
 				cout << "inserer k sans unite :" << endl;
 				cin >> MaMol[i].ks;
-				MaMol[i].typedonne.push_back("ks");
+				MaMol[i].typedonne.insert("ks");
 			}
 		}
 	}
@@ -221,16 +236,21 @@ vector<Molecules> Molecules::cv(vector<Molecules> &MaMol)
 		for (size_t k = 0; k < MaMol.size(); k++)
 			// fait la somme des volumes
 			vtot += MaMol[k].vol;
-		for (size_t k = 0; k < MaMol[i].typedonne.size(); k++)
+		for (auto k : MaMol[i].typedonne)
 		{
 			//calcul la concentration c1 c2 etc
-			if (MaMol[i].typedonne[k] == "masse")
-				MaMol[i].conc = (MaMol[i].masse / MaMol[i].vol) / MaMol[i].mmol;
-			else if (MaMol[i].typedonne[k] == "n")
+			if (k == "masse")
+			{
+				MaMol[i].n = chimie::Formules::calnmasse(MaMol[i].masse, MaMol[i].mmol);
+				MaMol[i].conc = chimie::Formules::concentration(MaMol[i].n, MaMol[i].vol);
+				MaMol[i].typedonne.insert("n");
+			}
+				
+			else if (k == "n")
 				MaMol[i].conc = MaMol[i].n / MaMol[i].vol;
 		}
-		MaMol[i].conc = (MaMol[i].conc * MaMol[i].vol) / vtot;
-		MaMol[i].typedonne.push_back("conc");
+		MaMol[i].conc = Formules::conccv(MaMol[i].conc, MaMol[i].vol, vtot);
+		MaMol[i].typedonne.insert("conc");
 	}
 	return MaMol;
 }
@@ -278,14 +298,7 @@ bool Molecules::reaction(vector<Molecules> &MaMol)
 	return true;
 }
 
-class Formules
-{
-public:
-	static double calnmasse(double masse, double mmol); // avoir n avec masse
-	static double calnconc(double conc, double vol); 	// avoir n avec conc 
-	static double concentration(double n, double vol);  // avoir concentration avec n et vol
-	static double masse(double n, double mmol);		    // avoir la masse avec n et mmol
-};
+
 double Formules::calnmasse(double masse, double mmol)
 {
 	return masse / mmol;
@@ -301,5 +314,13 @@ double Formules::concentration(double n, double vol)
 double Formules::masse(double n, double mmol)
 {
 	return n * mmol;
+}
+double Formules::volconc(double conc, double n)
+{
+	return n / conc;
+}
+double Formules::conccv(double conc, double vol, double vtot)
+{
+	return (conc * vol) / vtot;
 }
 }; // namespace chimie
