@@ -25,7 +25,7 @@ int main()
 			MaMol = chimie::Molecules::enterdata(MaMol);
 			bool react = chimie::Molecules::reaction(MaMol);
 			if (react == false) {
-				cout << "la reaction n'est pas valide continuer ? (0, 1)" << endl;
+				cout << "la reaction n'est pas valide continuer ? (non = 0, oui = 1)" << endl;
 				bool suite;
 				cin >> suite;
 				if (suite)
@@ -37,12 +37,13 @@ int main()
 					MaMol = chimie::Molecules::enterdata(MaMol);
 				}
 			}
+			else
+				cout << "reaction valide";
 			//pour linstant calcul lie a tte les autres molecules
 			for (string::size_type i = 0; i < MaMol.size(); i++) {
 				//if (MaMol[i].select) {
 				chimie::Molecules& mol = MaMol[i];
-
-				if (mol.donne == 1)
+				if (mol.typedonne.size() == 1)
 				{
 					/*
 					// pas sur plutot faire un cout de tt
@@ -52,21 +53,25 @@ int main()
 					else
 						cout << "la concentration de " << mol.brut << " est : " << mol.conc << " mol.L-1" << endl;
 						//test si ka ?
+						k a la fin apres le plus de calcul possible
 						*/
-					if (mol.typedonne[0] == "ks") {
-
-					}
 				}
-				else if (mol.donne >= 2)
+				else if (mol.typedonne.size() >= 2)
 				{
 					bool test = false;
-					for (int k = 0; k < mol.donne; k++) {
+					for (size_t k = 0; k < mol.typedonne.size(); k++) {
 						if (mol.typedonne[k] == "volume")
-							test = true; break;
+						{
+							test = true;
+							break;
+						}							
 					}
+
+
+					/*
 					if (test)
 					{
-						for (int k = 0; k < mol.donne; k++) {
+						for (int k = 0; k < mol.typedonne.size(); k++) {
 							if (mol.typedonne[k] == "n")
 							{
 								mol.conc = chimie::Formules::concentration(mol.n, mol.vol);
@@ -83,7 +88,8 @@ int main()
 							}
 						}
 					}
-					if (mol.donne >= 3)
+					*/
+					if (mol.typedonne.size() >= 3)
 					{
 
 					}
@@ -113,7 +119,7 @@ int main()
 					cout << "Molecule : " << mol.brut << " a une masse molaire de : " << mol.mmol << " g.mol-1" << endl;
 			}
 		}
-		cout << "recommncer ? (0, 1)" << endl;
+		cout << "recommncer ? (non = 0, oui = 1)" << endl;
 		cin >> Continue;
 	}
 	return 0;

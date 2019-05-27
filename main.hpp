@@ -54,15 +54,14 @@ public:
 
 	double masse; //g
 	double ks;
-	int donne;				  //nb de donne sur ctte molecule
+	int donne;				  //nb de donne sur ctte molecule typedonnee.size
 	vector<string> typedonne; //  type de donee genre typedonne[0] est le type de la donnee 0
 							  // concentration becher (c0 * v0) /vtot
 							  // ca * va = cb * vb (/ coef stoechi)
 
 	// faire en sorte que ca garde le nb de atom etc
 	map<string, double> atom; // nb atomes et leurs noms
-	// atom["C"] = 2
-
+							  // atom["C"] = 2
 };
 
 Molecules Molecules::set(string a, char b, int c, int d, string e)
@@ -105,14 +104,14 @@ double Molecules::masseMolaire(Molecules &mol)
 					char c = mol.brut[k - 1];
 					for (size_t j = 0; j < ATOM.size(); j++)
 					{
-						if (string(1, c) == ATOM[j].name) {
+						if (string(1, c) == ATOM[j].name)
+						{
 							mol.mmol += ATOM[j].mmol * somme;
 							if (mol.atom.find(string(1, c)) != mol.atom.end())
 								mol.atom[string(1, c)] += somme;
 							else
 								mol.atom[string(1, c)] = somme;
-							
-						}	
+						}
 					}
 				}
 				// si l'atom en a 2
@@ -121,7 +120,8 @@ double Molecules::masseMolaire(Molecules &mol)
 					string c = string(1, mol.brut[k - 2]) + string(1, mol.brut[k - 1]);
 					for (size_t j = 0; j < ATOM.size(); j++)
 					{
-						if (c == ATOM[j].name) {
+						if (c == ATOM[j].name)
+						{
 							mol.mmol += ATOM[j].mmol * somme;
 							if (mol.atom.find(c) != mol.atom.end())
 								mol.atom[c] += somme;
@@ -155,6 +155,11 @@ vector<Molecules> Molecules::demandeMol()
 		string type;
 		cout << "brut, positif, nb positif, nb molecules (dans la reaction), type(react, prod, null(pas important)" << endl;
 		cin >> name >> pos >> nbpos >> nbmol >> type;
+		if (type != "react" && type != "prod" && type != "null")
+		{
+			cout << "type(react, prod, null(pas important) ?" << endl;
+			cin >> type;
+		}
 		mol.push_back(chimie::Molecules::set(name, pos, nbpos, nbmol, type));
 		mol[i].mmol = Molecules::masseMolaire(mol[i]);
 		mol[i].typedonne.push_back("M");
@@ -230,37 +235,31 @@ vector<Molecules> Molecules::cv(vector<Molecules> &MaMol)
 }
 bool Molecules::reaction(vector<Molecules> &MaMol)
 {
-	vector<Molecules> reactif;
-	vector<Molecules> produit;
-	for(size_t i = 0; i < MaMol.size(); i++)
+	map<string, vector<Molecules>> reaction;
+	reaction["reactif"] = {};
+	reaction["produit"] = {};
+	for (size_t i = 0; i < MaMol.size(); i++)
 	{
 		if (MaMol[i].type == "react")
-			reactif.push_back(MaMol[i]);
+			reaction["reactif"].push_back(MaMol[i]);
 		else if (MaMol[i].type == "prod")
-			produit.push_back(MaMol[i]);		
+			reaction["produit"].push_back(MaMol[i]);
 	}
 	map<string, double> satom_rea; // tt les atomes dans tt les reactifs et leurs somme
 	map<string, double> satom_pro; // tt les atomes dans tt les produits et leurs somme
-	for (size_t i = 0; i < reactif.size(); i++)
+	for (map<string, vector<Molecules>>::iterator it = reaction.begin(); it != reaction.end(); it++)
 	{
-		for (map<string, double>::iterator it = reactif[i].atom.begin(); it != reactif[i].atom.end(); it++)
+		vector<Molecules> itmol = it->second;
+		for (size_t i = 0; i < itmol.size(); i++)
 		{
-			//faire que si cest un"C" ca aille dans satom["C"] etc
-			if (satom_rea.find(it->first) != satom_rea.end())
-				satom_rea[it->first] += it->second;
-			else
-				satom_rea[it->first] = it->second;
-		}		
-	}
-	for (size_t i = 0; i < produit.size(); i++)
-	{
-		for (map<string, double>::iterator it = produit[i].atom.begin(); it != produit[i].atom.end(); it++)
-		{
-			//faire que si cest un"C" ca aille dans satom["C"] etc
-			if (satom_pro.find(it->first) != satom_pro.end())
-				satom_pro[it->first] += it->second;
-			else
-				satom_pro[it->first] = it->second;
+			for (map<string, double>::iterator itsatom = itmol[i].atom.begin(); itsatom != itmol[i].atom.end(); itsatom++)
+			{
+				//faire que si cest un"C" ca aille dans satom["C"] etc
+				if (satom_rea.find(itsatom->first) != satom_rea.end())
+					satom_rea[itsatom->first] += itsatom->second;
+				else
+					satom_rea[itsatom->first] = itsatom->second;
+			}
 		}
 	}
 	for (map<string, double>::iterator it = satom_rea.begin(); it != satom_rea.end(); it++)
@@ -281,10 +280,10 @@ bool Molecules::reaction(vector<Molecules> &MaMol)
 class Formules
 {
 public:
-	static double caln(double masse, double mmol);
-	static double concentration(double n, double vol);
+	static double caln(double masse, double mmol);	 // avec conc faire masse = conc et mmol = 1/vol pour avoir n
+	static double concentration(double n, double vol); // avoir concentration avec n et vol
+	static double masse(double n, double mmol);		   // avoir la masse avec n et mmol
 };
-
 double Formules::caln(double masse, double mmol)
 {
 	return masse / mmol;
@@ -292,5 +291,9 @@ double Formules::caln(double masse, double mmol)
 double Formules::concentration(double n, double vol)
 {
 	return n / vol;
+}
+double Formules::masse(double n, double mmol)
+{
+	return n * mmol;
 }
 }; // namespace chimie
