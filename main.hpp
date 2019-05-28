@@ -5,6 +5,12 @@
 #include <vector>
 #include <map>
 #include <unordered_set>
+//using std::cout;
+//using std::string;
+//using std::endl;
+//using std::vector;
+//using std::map;
+//using std::unordered_set;
 using namespace std;
 
 namespace chimie

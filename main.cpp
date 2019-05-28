@@ -38,7 +38,7 @@ int main()
 				}
 			}
 			else
-				cout << "reaction valide";
+				cout << "reaction valide" << endl;
 			//pour linstant calcul lie a tte les autres molecules
 			for (size_t i = 0; i < MaMol.size(); i++)
 			{
@@ -61,33 +61,30 @@ int main()
 				{
 					for (auto k : mol.typedonne)
 					{
-						for (auto j : mol.typedonne)
+						if (k == "n")
 						{
-							if (k == "n")
+							if (mol.typedonne.count("M"))
 							{
-								if (j == "M")
-								{
-									mol.masse = chimie::Formules::masse(mol.n, mol.mmol);
-									mol.typedonne.insert("masse");
-								}
-								if (j == "vol")
-								{
-									mol.conc = chimie::Formules::concentration(mol.n, mol.vol);
-									mol.typedonne.insert("conc");
-								}
+								mol.masse = chimie::Formules::masse(mol.n, mol.mmol);
+								mol.typedonne.insert("masse");
 							}
-							else if (k == "conc")
+							if (mol.typedonne.count("vol"))
 							{
-								if (j == "vol")
-								{
-									mol.n = chimie::Formules::calnconc(mol.conc, mol.vol);
-									mol.typedonne.insert("n");
-								}
-								else if (j == "n")
-								{
-									mol.vol = chimie::Formules::volconc(mol.conc, mol.n);
-									mol.typedonne.insert("vol");
-								}
+								mol.conc = chimie::Formules::concentration(mol.n, mol.vol);
+								mol.typedonne.insert("conc");
+							}
+						}
+						else if (k == "conc")
+						{
+							if (mol.typedonne.count("vol"))
+							{
+								mol.n = chimie::Formules::calnconc(mol.conc, mol.vol);
+								mol.typedonne.insert("n");
+							}
+							else if (mol.typedonne.count("n"))
+							{
+								mol.vol = chimie::Formules::volconc(mol.conc, mol.n);
+								mol.typedonne.insert("vol");
 							}
 						}
 					}
@@ -108,21 +105,18 @@ int main()
 		for (size_t i = 0; i < MaMol.size(); i++)
 		{
 			chimie::Molecules &mol = MaMol[i];
-			for (auto k : mol.typedonne)
-			{
-				if (k == "vol")
-					cout << "Molecule : " << mol.brut << " a un volume de : " << mol.vol << " L" << endl;
-				else if (k == "masse")
-					cout << "Molecule : " << mol.brut << " a une masse de : " << mol.masse << " g" << endl;
-				else if (k == "n")
-					cout << "Molecule : " << mol.brut << " a un nb de mol de : " << mol.n << " mol" << endl;
-				else if (k == "conc")
-					cout << "Molecule : " << mol.brut << " a une concentration de : " << mol.conc << " mol.L-1" << endl;
-				else if (k == "M")
-					cout << "Molecule : " << mol.brut << " a une masse molaire de : " << mol.mmol << " g.mol-1" << endl;
-			}
+			if (mol.typedonne.count("vol"))
+				cout << "Molecule : " << mol.brut << " a un volume de : " << mol.vol << " L" << endl;
+			if (mol.typedonne.count("masse"))
+				cout << "Molecule : " << mol.brut << " a une masse de : " << mol.masse << " g" << endl;
+			if (mol.typedonne.count("n"))
+				cout << "Molecule : " << mol.brut << " a un nb de mol de : " << mol.n << " mol" << endl;
+			if (mol.typedonne.count("conc"))
+				cout << "Molecule : " << mol.brut << " a une concentration de : " << mol.conc << " mol.L-1" << endl;
+			if (mol.typedonne.count("M"))
+				cout << "Molecule : " << mol.brut << " a une masse molaire de : " << mol.mmol << " g.mol-1" << endl;
 		}
-		cout << "recommncer ? (non = 0, oui = 1)" << endl;
+		cout << "recommencer ? (non = 0, oui = 1)" << endl;
 		cin >> Continue;
 	}
 	return 0;
