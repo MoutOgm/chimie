@@ -41,11 +41,11 @@ const vector<atom> ATOM = {
 class Molecules
 {
 public:
-	static Molecules set(string a, char b, int c, int d, string e); // set les bases de chaque molecules
-	static double masseMolaire(Molecules &mol);						//calcul la masse molair de chaque molecule a partir des cstes ATOM
-	static vector<Molecules> demandeMol();							// demande le nb de molecules et utilise set pour les mettre
-	static vector<Molecules> enterdata(vector<Molecules> &MaMol);   //entre chaque donnees de lutilisateur
-	static vector<Molecules> cv(vector<Molecules> &MaMol);			// calcul la conc dun melange
+	static Molecules set(string a, char b, int c, int d, vector<string> e); // set les bases de chaque molecules
+	static double masseMolaire(Molecules &mol);								//calcul la masse molair de chaque molecule a partir des cstes ATOM
+	static vector<Molecules> demandeMol();									// demande le nb de molecules et utilise set pour les mettre
+	static vector<Molecules> enterdata(vector<Molecules> &MaMol);			//entre chaque donnees de lutilisateur
+	static vector<Molecules> cv(vector<Molecules> &MaMol);					// calcul la conc dun melange
 	static bool reaction(vector<Molecules> &MaMol);
 
 	string brut;  //H2O1
@@ -54,46 +54,44 @@ public:
 	int nbmol;
 	//calcul mol
 
-	double mmol; // masse molaire de la molecules
-	double vol;  //l ou ml a voir
-	double n;	// nb de mol
-	double conc; //concentration mol.l-1
+	double mmol;				// masse molaire de la molecules
+	double vol;					//l ou ml a voir
+	double n;					// nb de mol
+	double conc;				//concentration mol.l-1
 	unordered_set<string> type; //react prod null + melange liquide etc
 
 	double masse; //g
 	double ks;
-	int donne;				  //nb de donne sur ctte molecule typedonnee.size
+	int donne;						 //nb de donne sur ctte molecule typedonnee.size
 	unordered_set<string> typedonne; //  type de donee genre typedonne[0] est le type de la donnee 0
-							  // concentration becher (c0 * v0) /vtot
-							  // ca * va = cb * vb (/ coef stoechi)
-							  // n  vol masse conc M
+									 // concentration becher (c0 * v0) /vtot
+									 // ca * va = cb * vb (/ coef stoechi)
+									 // n  vol masse conc M
 
 	// faire en sorte que ca garde le nb de atom etc
 	map<string, double> atom; // nb atomes et leurs noms
 							  // atom["C"] = 2
-
 };
 class Formules
 {
 public:
-	static double calnmasse(double masse, double mmol); // avoir n avec masse
-	static double calnconc(double conc, double vol); 	// avoir n avec conc 
-	static double concentration(double n, double vol);  // avoir concentration avec n et vol
-	static double masse(double n, double mmol);		    // avoir la masse avec n et mmol
-	static double volconc(double conc, double n); 		// avoir le volume avec n et conc
+	static double calnmasse(double masse, double mmol);			// avoir n avec masse
+	static double calnconc(double conc, double vol);			// avoir n avec conc
+	static double concentration(double n, double vol);			// avoir concentration avec n et vol
+	static double masse(double n, double mmol);					// avoir la masse avec n et mmol
+	static double volconc(double conc, double n);				// avoir le volume avec n et conc
 	static double conccv(double conc, double vol, double vtot); // avoir la concentration avec c0v0 /vtot
 };
 
-
-
-Molecules Molecules::set(string a, char b, int c, int d, string e)
+Molecules Molecules::set(string a, char b, int c, int d, vector<string> e)
 {
 	Molecules mol = {};
 	mol.brut = a;
 	mol.positif = b;
 	mol.nbpositif = c;
 	mol.nbmol = d;
-	mol.type.insert(e);
+	for (size_t i = 0; i < e.size(); i++)
+		mol.type.insert(e[i]);
 	return mol;
 }
 
@@ -162,25 +160,31 @@ double Molecules::masseMolaire(Molecules &mol)
 vector<Molecules> Molecules::demandeMol()
 {
 	vector<Molecules> mol;
-	int nbT = 0;
-	while (nbT == 0)
+	int nbM = 0;
+	while (nbM == 0)
 	{
 		cout << "nombre de molecules a faire ?";
-		cin >> nbT;
+		cin >> nbM;
 	}
-	for (int i = 0; i < nbT; i++)
+	for (int i = 0; i < nbM; i++)
 	{
 		string name = "H1Cl1";
 		char pos = '~';
 		int nbpos = 1;
 		int nbmol = 1;
-		string type;
-		cout << "brut, positif, nb positif, nb molecules (dans la reaction), type(react, prod, null(pas important)" << endl;
-		cin >> name >> pos >> nbpos >> nbmol >> type;
-		if (type != "react" && type != "prod" && type != "null")
+		cout << "brut, positif, nb positif, nb molecules (dans la reaction)" << endl;
+		cin >> name >> pos >> nbpos >> nbmol;
+		cout << "nb de type sur la molecule" << endl;
+		size_t nbtype;
+		cin >> nbtype;
+		vector<string> type;
+		for (int i = 0; type.size() != nbtype; i++)
 		{
-			cout << "type(react, prod, null(pas important) ?" << endl;
-			cin >> type;
+			if (i == 0)
+				cout << "type: (react, prod, null(pas important)" << endl;
+			else
+				cout << "type: (melange, gazeux, liquide, solide, )" << endl;
+			cin >> type[i];
 		}
 		mol.push_back(chimie::Molecules::set(name, pos, nbpos, nbmol, type));
 		mol[i].mmol = Molecules::masseMolaire(mol[i]);
@@ -251,7 +255,7 @@ vector<Molecules> Molecules::cv(vector<Molecules> &MaMol)
 				MaMol[i].conc = chimie::Formules::concentration(MaMol[i].n, MaMol[i].vol);
 				MaMol[i].typedonne.insert("n");
 			}
-				
+
 			else if (k == "n")
 				MaMol[i].conc = MaMol[i].n / MaMol[i].vol;
 		}
@@ -303,7 +307,6 @@ bool Molecules::reaction(vector<Molecules> &MaMol)
 	}
 	return true;
 }
-
 
 double Formules::calnmasse(double masse, double mmol)
 {
