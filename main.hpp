@@ -177,14 +177,16 @@ vector<Molecules> Molecules::demandeMol()
 		cout << "nb de type sur la molecule" << endl;
 		size_t nbtype;
 		cin >> nbtype;
-		vector<string> type;
+		vector<string> type = {};
 		for (int i = 0; type.size() != nbtype; i++)
 		{
 			if (i == 0)
 				cout << "type: (react, prod, null(pas important)" << endl;
 			else
 				cout << "type: (melange, gazeux, liquide, solide, )" << endl;
-			cin >> type[i];
+			string types; // pour enregistreer la donne et la stocker
+			cin >> types;
+			type.push_back(types);
 		}
 		mol.push_back(chimie::Molecules::set(name, pos, nbpos, nbmol, type));
 		mol[i].mmol = Molecules::masseMolaire(mol[i]);
@@ -240,27 +242,21 @@ vector<Molecules> Molecules::enterdata(vector<Molecules> &MaMol)
 }
 vector<Molecules> Molecules::cv(vector<Molecules> &MaMol)
 {
+	double vtot = 0; // initialise vtot (v0 +v1 +v2 +..)
+	for (size_t i = 0; i < MaMol.size(); i++)
+		// fait la somme des volumes
+		if (MaMol[i].type.count("melange") && MaMol[i].typedonne.count("vol"))
+			vtot += MaMol[i].vol;
 	for (size_t i = 0; i < MaMol.size(); i++)
 	{
-		double vtot = 0; // initialise vtot (v0 +v1 +v2 +..)
-		for (size_t k = 0; k < MaMol.size(); k++)
-			// fait la somme des volumes
-			vtot += MaMol[k].vol;
-		for (auto k : MaMol[i].typedonne)
+		if (MaMol[i].type.count("melange"))
 		{
-			//calcul la concentration c1 c2 etc
-			if (k == "masse")
-			{
-				MaMol[i].n = chimie::Formules::calnmasse(MaMol[i].masse, MaMol[i].mmol);
-				MaMol[i].conc = chimie::Formules::concentration(MaMol[i].n, MaMol[i].vol);
-				MaMol[i].typedonne.insert("n");
+			cout << "calcul1" << endl;
+			if (MaMol[i].typedonne.count("conc") && MaMol[i].typedonne.count("vol")) {
+				cout << "calcul2" << endl;
+				MaMol[i].conc = Formules::conccv(MaMol[i].conc, MaMol[i].vol, vtot);
 			}
-
-			else if (k == "n")
-				MaMol[i].conc = MaMol[i].n / MaMol[i].vol;
 		}
-		MaMol[i].conc = Formules::conccv(MaMol[i].conc, MaMol[i].vol, vtot);
-		MaMol[i].typedonne.insert("conc");
 	}
 	return MaMol;
 }
@@ -330,6 +326,6 @@ double Formules::volconc(double conc, double n)
 }
 double Formules::conccv(double conc, double vol, double vtot)
 {
-	return (conc * vol) / vtot;
+	return ((conc * vol) / vtot);
 }
 }; // namespace chimie
