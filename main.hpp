@@ -58,7 +58,7 @@ public:
 	double vol;  //l ou ml a voir
 	double n;	// nb de mol
 	double conc; //concentration mol.l-1
-	string type; //react prod null + melange liquide etc
+	unordered_set<string> type; //react prod null + melange liquide etc
 
 	double masse; //g
 	double ks;
@@ -93,7 +93,7 @@ Molecules Molecules::set(string a, char b, int c, int d, string e)
 	mol.positif = b;
 	mol.nbpositif = c;
 	mol.nbmol = d;
-	mol.type = e;
+	mol.type.insert(e);
 	return mol;
 }
 
@@ -198,7 +198,7 @@ vector<Molecules> Molecules::enterdata(vector<Molecules> &MaMol)
 		{
 			cout << "molecule : " << MaMol[i].brut << " inserer donne : " << k;
 			cout << " volume, mol, masse, k, concentration" << endl;
-			string type;
+			string type; // type de donnes a add sur la molecule
 			cin >> type;
 			if (type == "volume")
 			{
@@ -267,9 +267,9 @@ bool Molecules::reaction(vector<Molecules> &MaMol)
 	reaction["produit"] = {};
 	for (size_t i = 0; i < MaMol.size(); i++)
 	{
-		if (MaMol[i].type == "react")
+		if (MaMol[i].type.count("react"))
 			reaction["reactif"].push_back(MaMol[i]);
-		else if (MaMol[i].type == "prod")
+		else if (MaMol[i].type.count("prod"))
 			reaction["produit"].push_back(MaMol[i]);
 	}
 	map<string, double> satom_rea; // tt les atomes dans tt les reactifs et leurs somme
