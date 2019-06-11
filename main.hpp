@@ -6,6 +6,7 @@
 #include <vector>
 #include <map>
 #include <unordered_set>
+#include <algorithm>
 //using std::cout;
 //using std::string;
 //using std::endl;
@@ -56,12 +57,13 @@ public:
 	static vector<Molecules> cv(vector<Molecules> &MaMol);								  // calcul la conc dun melange
 	static bool reaction(vector<Molecules> &MaMol);										  // verifi que la reaction est valide
 	static bool exist(Molecules &mol);													  // calcul si la molecule existe
+	static vector<Molecules> tabadvance(vector<Molecules> &MaMol);						  //fait les calculs de tableau d'avancement
 
 	string brut; //H2O1
 	//char positif; //'-' '+' '~'
 	//int nbpositif;
 	map<char, int> positivite;
-	int nbmol;
+	int nbmol; // nb de mol
 	//calcul mol
 
 	double mmol;				// masse molaire de la molecules
@@ -89,10 +91,12 @@ class Formules
 public:
 	static double calnmasse(double masse, double mmol);			// avoir n avec masse
 	static double calnconc(double conc, double vol);			// avoir n avec conc
+	static double calcnxmax(double xmax, int nbmol);			// avoir n avec xmax
 	static double concentration(double n, double vol);			// avoir concentration avec n et vol
 	static double masse(double n, double mmol);					// avoir la masse avec n et mmol
 	static double volconc(double conc, double n);				// avoir le volume avec n et conc
 	static double conccv(double conc, double vol, double vtot); // avoir la concentration avec c0v0 /vtot
+	static double xmax(double n, int nbmol);					// calcul le xmax de la molecule
 };
 
 Molecules Molecules::set(string a, char b, int c, int d, vector<string> e, int f, int g)
@@ -228,7 +232,13 @@ vector<Molecules> Molecules::enterdata(vector<Molecules> &MaMol)
 {
 	for (size_t i = 0; i < MaMol.size(); i++)
 	{
-		cout << "nb de donnees sur cette molecule ? " << MaMol[i].brut << endl;
+		cout << "nb de donnees sur cette molecule ? " << MaMol[i].brut;
+		if (MaMol[i].type.count("react"))
+			cout << " react" << endl;
+		else if (MaMol[i].type.count("prod"))
+			cout << " prod" << endl;
+		else if (MaMol[i].type.count("null"))
+			cout << " null" << endl;
 		cin >> MaMol[i].donne;
 		for (int k = 0; k < MaMol[i].donne; k++)
 		{
@@ -352,6 +362,45 @@ bool Molecules::exist(Molecules &mol)
 		return false;
 }
 
+vector<Molecules> Molecules::tabadvance(vector<Molecules> &MaMol)
+{
+	map<string, vector<Molecules>> stockmol;
+	for (size_t i = 0; i < MaMol.size(); i++)
+	{
+		if (MaMol[i].type.count("react"))
+			stockmol["react"].push_back(MaMol[i]);
+		else if (MaMol[i].type.count("prod"))
+			stockmol["prod"].push_back(MaMol[i]);
+	}
+	for (map<string, vector<Molecules>>::iterator it = stockmol.begin(); it != stockmol.end(); it++)
+	{
+		cout << it->first << " de la reactions : " << endl;
+		for (size_t i = 0; i < it->second.size(); i++)
+			cout << i << " : " << it->second[i].brut << endl;
+	}
+	map<string, double> xmax;
+	for (size_t i = 0; i < stockmol["react"].size(); i++)
+		xmax[stockmol["react"][i].brut] = Formules::xmax(stockmol["react"][i].n, stockmol["react"][i].nbmol);
+	//xmax molecule react MaMol[i] .brut
+	double xmaxfinal;
+	for (map<string, double>::iterator it1 = xmax.begin(); it1 != xmax.end(); it1++)
+		for (map<string, double>::iterator it2 = xmax.begin(); it2 != xmax.end(); it2++)
+			if (it1->second <= it2->second)
+				xmaxfinal = it1->second;
+			else
+				xmaxfinal = it2->second;
+	for (size_t i = 0; i < stockmol["prod"].size(); i++)
+	{
+		stockmol["prod"][i].n += Formules::calcnxmax(xmaxfinal, stockmol["prod"][i].nbmol);
+		stockmol["prod"][i].typedonne.insert("n");
+	}
+	for (size_t i = 0; i < stockmol["prod"].size(); i++)
+		for (size_t k = 0; k < MaMol.size(); k++)
+			if (stockmol["prod"][i].brut == MaMol[k].brut && MaMol[k].type.count("prod"))
+				MaMol[k] = stockmol["prod"][i];
+	return MaMol;
+}
+
 double Formules::calnmasse(double masse, double mmol)
 {
 	return masse / mmol;
@@ -359,6 +408,10 @@ double Formules::calnmasse(double masse, double mmol)
 double Formules::calnconc(double conc, double vol)
 {
 	return conc * vol;
+}
+double Formules::calcnxmax(double xmax, int nbmol)
+{
+	return nbmol * xmax;
 }
 double Formules::concentration(double n, double vol)
 {
@@ -375,5 +428,9 @@ double Formules::volconc(double conc, double n)
 double Formules::conccv(double conc, double vol, double vtot)
 {
 	return (conc * vol) / vtot;
+}
+double Formules::xmax(double n, int nbmol)
+{
+	return n / nbmol;
 }
 }; // namespace chimie

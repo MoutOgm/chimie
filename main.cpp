@@ -37,6 +37,23 @@ int main()
 		//pour linstant calcul lie a tte les autres molecules
 		for (size_t i = 0; i < MaMol.size(); i++)
 		{
+			chimie::Molecules &mol = MaMol[i];
+			if (mol.typedonne.count("masse"))
+				if (mol.typedonne.count("M"))
+				{
+					mol.n = chimie::Formules::calnmasse(mol.masse, mol.mmol);
+					mol.typedonne.insert("n");
+				}
+			if (mol.typedonne.count("conc"))
+				if (mol.typedonne.count("vol"))
+				{
+					mol.n = chimie::Formules::calnconc(mol.conc, mol.vol);
+					mol.typedonne.insert("n");
+				}
+		}
+		MaMol = chimie::Molecules::tabadvance(MaMol);
+		for (size_t i = 0; i < MaMol.size(); i++)
+		{
 			//if (MaMol[i].select) {
 			chimie::Molecules &mol = MaMol[i];
 			for (auto k : mol.typedonne)
@@ -86,27 +103,27 @@ int main()
 			if (mol.typedonne.count("vol"))
 			{
 				cout << "Molecule : " << mol.brut << " a un volume de : " << mol.vol << " L" << endl;
-				file << "vol : " << mol.vol << endl;
+				file << "	vol : " << mol.vol << endl;
 			}
 			if (mol.typedonne.count("masse"))
 			{
 				cout << "Molecule : " << mol.brut << " a une masse de : " << mol.masse << " g" << endl;
-				file << "masse : " << mol.masse << endl;
+				file << "	masse : " << mol.masse << endl;
 			}
 			if (mol.typedonne.count("n"))
 			{
 				cout << "Molecule : " << mol.brut << " a un nb de mol de : " << mol.n << " mol" << endl;
-				file << "nb mol : " << mol.n << endl;
+				file << "	nb mol : " << mol.n << endl;
 			}
 			if (mol.typedonne.count("conc"))
 			{
 				cout << "Molecule : " << mol.brut << " a une concentration de : " << mol.conc << " mol.L-1" << endl;
-				file << "concentration : " << mol.conc << endl;
+				file << "	concentration : " << mol.conc << endl;
 			}
 			if (mol.typedonne.count("M"))
 			{
 				cout << "Molecule : " << mol.brut << " a une masse molaire de : " << mol.mmol << " g.mol-1" << endl;
-				file << "M : " << mol.mmol << endl;
+				file << "	M : " << mol.mmol << endl;
 			}
 		}
 		cout << "recommencer ? (non = 0, oui = 1)" << endl;
