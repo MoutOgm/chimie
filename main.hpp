@@ -1,5 +1,6 @@
 #pragma once
 #include <iostream>
+#include <fstream>
 #include <string>
 #include <math.h>
 #include <vector>
@@ -18,39 +19,48 @@ namespace chimie
 struct atom
 {
 	string name;
-	double mmol; // masse molaire
-	double elec; // electronegativite
+	double mmol;  // masse molaire
+	double elec;  // electronegativite
+	int liaisons; // nb liaisons de la mol
 };
 
 const vector<atom> ATOM = {
 	//1 carac
-	{"C", 12, 2.55},
-	{"N", 14, 3.04},
-	{"H", 1, 2.2},
-	{"O", 16, 3.44},
+	{"H", 1, 2.2, 1},
+	{"C", 12, 2.55, 4},
+	{"N", 14, 3.04, 3},
+	{"O", 16, 3.44, 2},
+	{"K", 39, 0.82, 1},
+	{"B", 10.8, 2.04, 3},
+	{"F", 19.9, 3.98, 1},
 	//2 carac
-	{"Na", 23, 0.93},
-	{"Mg", 24.3, 1.31},
-	{"Ca", 40, 1},
-	{"Cr", 52, 1.66},
-	{"Cl", 35.5, 3.16},
-	{"Fe", 56, 1.83},
-	{"Ag", 108, 1.93},
+	{"Li", 6.94, 0.98, 1},
+	{"Be", 9, 1.57, 2},
+	{"Na", 23, 0.93, 1},
+	{"Mg", 24.3, 1.31, 2},
+	{"Ca", 40, 1, 2},
+	{"Cr", 52, 1.66, 2},
+	{"Cl", 35.5, 3.16, 1},
+	{"Fe", 56, 1.83, 2},
+	{"Ag", 108, 1.93, 1},
+	{"Al", 26.9, 1.61, 3},
 };
 
 class Molecules
 {
 public:
-	static Molecules set(string a, char b, int c, int d, vector<string> e); // set les bases de chaque molecules
-	static double masseMolaire(Molecules &mol);								//calcul la masse molair de chaque molecule a partir des cstes ATOM
-	static vector<Molecules> demandeMol();									// demande le nb de molecules et utilise set pour les mettre
-	static vector<Molecules> enterdata(vector<Molecules> &MaMol);			//entre chaque donnees de lutilisateur
-	static vector<Molecules> cv(vector<Molecules> &MaMol);					// calcul la conc dun melange
-	static bool reaction(vector<Molecules> &MaMol);
+	static Molecules set(string a, char b, int c, int d, vector<string> e, int f, int g); // set les bases de chaque molecules
+	static double masseMolaire(Molecules &mol);											  //calcul la masse molair de chaque molecule a partir des cstes ATOM
+	static vector<Molecules> demandeMol();												  // demande le nb de molecules et utilise set pour les mettre
+	static vector<Molecules> enterdata(vector<Molecules> &MaMol);						  //entre chaque donnees de lutilisateur
+	static vector<Molecules> cv(vector<Molecules> &MaMol);								  // calcul la conc dun melange
+	static bool reaction(vector<Molecules> &MaMol);										  // verifi que la reaction est valide
+	static bool exist(Molecules &mol);													  // calcul si la molecule existe
 
-	string brut;  //H2O1
-	char positif; //'-' '+' '~'
-	int nbpositif;
+	string brut; //H2O1
+	//char positif; //'-' '+' '~'
+	//int nbpositif;
+	map<char, int> positivite;
 	int nbmol;
 	//calcul mol
 
@@ -69,8 +79,10 @@ public:
 									 // n  vol masse conc M
 
 	// faire en sorte que ca garde le nb de atom etc
-	map<string, double> atom; // nb atomes et leurs noms
-							  // atom["C"] = 2
+	map<string, int> atom; // nb atomes et leurs noms
+						   // atom["C"] = 2
+
+	map<string, int> liaison; //"double", "triple"
 };
 class Formules
 {
@@ -83,15 +95,16 @@ public:
 	static double conccv(double conc, double vol, double vtot); // avoir la concentration avec c0v0 /vtot
 };
 
-Molecules Molecules::set(string a, char b, int c, int d, vector<string> e)
+Molecules Molecules::set(string a, char b, int c, int d, vector<string> e, int f, int g)
 {
 	Molecules mol = {};
 	mol.brut = a;
-	mol.positif = b;
-	mol.nbpositif = c;
+	mol.positivite[b] = c;
 	mol.nbmol = d;
 	for (size_t i = 0; i < e.size(); i++)
 		mol.type.insert(e[i]);
+	mol.liaison["double"] = f;
+	mol.liaison["triple"] = g;
 	return mol;
 }
 
@@ -159,7 +172,7 @@ double Molecules::masseMolaire(Molecules &mol)
 }
 vector<Molecules> Molecules::demandeMol()
 {
-	vector<Molecules> mol;
+	vector<Molecules> mol = {};
 	int nbM = 0;
 	while (nbM == 0)
 	{
@@ -168,28 +181,45 @@ vector<Molecules> Molecules::demandeMol()
 	}
 	for (int i = 0; i < nbM; i++)
 	{
-		string name = "H1Cl1";
+		string name = "C1";
 		char pos = '~';
 		int nbpos = 1;
 		int nbmol = 1;
-		cout << "brut, positif, nb positif, nb molecules (dans la reaction)" << endl;
-		cin >> name >> pos >> nbpos >> nbmol;
-		cout << "nb de type sur la molecule" << endl;
-		size_t nbtype;
-		cin >> nbtype;
-		vector<string> type = {};
-		for (int i = 0; type.size() != nbtype; i++)
+		int nbdouble = 1;
+		int nbtriple = 1;
+		bool exist = false;
+		while (exist == false)
 		{
-			if (i == 0)
-				cout << "type: (react, prod, null(pas important)" << endl;
-			else
-				cout << "type: (melange, gazeux, liquide, solide, )" << endl;
-			string types; // pour enregistreer la donne et la stocker
-			cin >> types;
-			type.push_back(types);
+			cout << "brut, positif, nb positif, nb molecules (dans la reaction), nb double liaisons, nb triple liaisons" << endl;
+			cin >> name >> pos >> nbpos >> nbmol >> nbdouble >> nbtriple;
+			cout << "nb de type sur la molecule" << endl;
+			size_t nbtype;
+			cin >> nbtype;
+			if (nbtype == 0)
+				nbtype = 1;
+			vector<string> type = {};
+			for (int k = 0; type.size() != nbtype; k++)
+			{
+				if (k == 0)
+					cout << "type: (react, prod, null(pas important)" << endl;
+				else
+					cout << "type: (melange, gazeux, liquide, solide, dissolution, )" << endl;
+				string types; // pour enregistreer la donne et la stocker
+				cin >> types;
+				type.push_back(types);
+			}
+			mol.push_back(Molecules::set(name, pos, nbpos, nbmol, type, nbdouble, nbtriple));
+			mol[i].mmol = Molecules::masseMolaire(mol[i]);
+			exist = Molecules::exist(mol[i]);
+			if (!exist)
+			{
+				cout << "la molecule nexiste pas mais continuer ? (non=0,oui=1)" << endl;
+				cin >> exist;
+				if (!exist)
+					mol.erase(mol.begin() + i);
+			}
 		}
-		mol.push_back(chimie::Molecules::set(name, pos, nbpos, nbmol, type));
-		mol[i].mmol = Molecules::masseMolaire(mol[i]);
+
 		mol[i].typedonne.insert("M");
 	}
 	return mol;
@@ -248,20 +278,14 @@ vector<Molecules> Molecules::cv(vector<Molecules> &MaMol)
 		if (MaMol[i].type.count("melange") && MaMol[i].typedonne.count("vol"))
 			vtot += MaMol[i].vol;
 	for (size_t i = 0; i < MaMol.size(); i++)
-	{
 		if (MaMol[i].type.count("melange"))
-		{
-			cout << "calcul1" << endl;
-			if (MaMol[i].typedonne.count("conc") && MaMol[i].typedonne.count("vol")) {
-				cout << "calcul2" << endl;
+			if (MaMol[i].typedonne.count("conc") && MaMol[i].typedonne.count("vol"))
 				MaMol[i].conc = Formules::conccv(MaMol[i].conc, MaMol[i].vol, vtot);
-			}
-		}
-	}
 	return MaMol;
 }
 bool Molecules::reaction(vector<Molecules> &MaMol)
 {
+	//faire avec les - et + aussi pas seulement les atomes
 	map<string, vector<Molecules>> reaction;
 	reaction["reactif"] = {};
 	reaction["produit"] = {};
@@ -279,13 +303,19 @@ bool Molecules::reaction(vector<Molecules> &MaMol)
 		vector<Molecules> itmol = it->second;
 		for (size_t i = 0; i < itmol.size(); i++)
 		{
-			for (map<string, double>::iterator itsatom = itmol[i].atom.begin(); itsatom != itmol[i].atom.end(); itsatom++)
+			for (map<string, int>::iterator itsatom = itmol[i].atom.begin(); itsatom != itmol[i].atom.end(); itsatom++)
 			{
 				//faire que si cest un"C" ca aille dans satom["C"] etc
-				if (satom_rea.find(itsatom->first) != satom_rea.end())
-					satom_rea[itsatom->first] += itsatom->second;
-				else
-					satom_rea[itsatom->first] = itsatom->second;
+				if (itmol[i].type.count("react"))						   // verif si cest un reactif pour le mettre dans les reactifs
+					if (satom_rea.find(itsatom->first) != satom_rea.end()) // si on a deja un nb de cet atom
+						satom_rea[itsatom->first] += itsatom->second;
+					else
+						satom_rea[itsatom->first] = itsatom->second;
+				else if (itmol[i].type.count("prod"))					   // verif que cest un produit pour le mettre dans les produit
+					if (satom_pro.find(itsatom->first) != satom_pro.end()) // si on a deja un nb de cet atom
+						satom_pro[itsatom->first] += itsatom->second;
+					else
+						satom_pro[itsatom->first] = itsatom->second;
 			}
 		}
 	}
@@ -302,6 +332,24 @@ bool Molecules::reaction(vector<Molecules> &MaMol)
 			return false;
 	}
 	return true;
+}
+
+bool Molecules::exist(Molecules &mol)
+{
+	double liaison = 0; // somme liaison possible
+	int atoms = 0;		// somme tout les atomes
+	for (map<string, int>::iterator it = mol.atom.begin(); it != mol.atom.end(); it++)
+	{
+		atoms += it->second;
+		for (int i = 0; i < ATOM.size(); i++)
+			if (it->first == ATOM[i].name)
+				liaison += ATOM[i].liaisons * it->second;
+	}
+	atoms = atoms + mol.liaison["double"] + (2 * mol.liaison["triple"]) - 1;
+	if (ceil(liaison / 2) == atoms)
+		return true;
+	else
+		return false;
 }
 
 double Formules::calnmasse(double masse, double mmol)
@@ -326,6 +374,6 @@ double Formules::volconc(double conc, double n)
 }
 double Formules::conccv(double conc, double vol, double vtot)
 {
-	return ((conc * vol) / vtot);
+	return (conc * vol) / vtot;
 }
 }; // namespace chimie
